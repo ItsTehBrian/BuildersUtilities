@@ -14,12 +14,17 @@ import xyz.tehbrian.buildersutilities.listeners.inventories.banner.BannerColorIn
 import xyz.tehbrian.buildersutilities.listeners.inventories.banner.BannerPatternInventoryListener;
 import xyz.tehbrian.buildersutilities.player.PlayerDataManager;
 import xyz.tehbrian.buildersutilities.util.MessageUtils;
+import xyz.tehbrian.restrictionhelper.DebugLogger;
+import xyz.tehbrian.restrictionhelper.RestrictionHelper;
+import xyz.tehbrian.restrictionhelper.restrictions.PlotSquaredRestriction;
+import xyz.tehbrian.restrictionhelper.restrictions.WorldGuardRestriction;
 
 public class BuildersUtilities extends JavaPlugin {
 
     private static BuildersUtilities instance;
 
     private PlayerDataManager playerDataManager;
+    private RestrictionHelper restrictionHelper;
 
     public BuildersUtilities() {
         instance = this;
@@ -33,6 +38,7 @@ public class BuildersUtilities extends JavaPlugin {
         setupConfig();
         setupEvents();
         setupCommands();
+        setupRestrictions();
 
         new NoClipManager(this);
     }
@@ -68,6 +74,24 @@ public class BuildersUtilities extends JavaPlugin {
         setPermissionMessages();
     }
 
+    private void setupRestrictions() {
+        restrictionHelper = new RestrictionHelper(this.getLogger());
+        DebugLogger debugLogger = restrictionHelper.getDebugLogger();
+
+        PluginManager pm = getServer().getPluginManager();
+        if (pm.getPlugin("PlotSquared") != null) {
+            getLogger().info("PlotSquared detected. Registering permission validator..");
+            restrictionHelper.registerRestriction(new PlotSquaredRestriction(debugLogger));
+            getLogger().info("PlotSquared validator registered successfully!");
+        }
+
+        if (pm.getPlugin("WorldGuard") != null) {
+            getLogger().info("WorldGuard detected. Registering permission validator..");
+            restrictionHelper.registerRestriction(new WorldGuardRestriction(debugLogger));
+            getLogger().info("WorldGuard validator registered successfully!");
+        }
+    }
+
     /*
         Unfortunately, only Paper allows you to set the
         default permission message, so to allow those who
@@ -100,5 +124,9 @@ public class BuildersUtilities extends JavaPlugin {
             playerDataManager = new PlayerDataManager();
         }
         return playerDataManager;
+    }
+
+    public RestrictionHelper getRestrictionHelper() {
+        return restrictionHelper;
     }
 }
